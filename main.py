@@ -1,38 +1,35 @@
 import subprocess
 import os
+import xml.etree.ElementTree as ET
+import time
 
-#pass file
-password = open("pass.txt", "w")
-password.write("wsg good bbg:\n\n")
-password.close()
-
-
-#lists
+# lists
 wifi_files = []
-wifi_name = []
-wifi_password = []
+wifi_names = []
+wifi_passwords = []
 
-#term cmd
-command = subprocess.run(["netsh", "wlan", "export", "profile", "key=clear"], capture_output = True).stdout.decode()
+# term cmd
+subprocess.run(["netsh", "wlan", "export", "profile", "key=clear"], capture_output = True)
 
-#pulls current dir
+# pulls current dir
 path = os.getcwd()
 
-
-#Magic
+# Magic
 for filename in os.listdir(path):
-    if filename.startswith("Wi-FI") and filename.endswith(".xml"):
+    if filename.startswith("Wi-Fi") and filename.endswith(".xml"):
         wifi_files.append(filename)
-        for i in wifi_files:
-            with open(i,'r') as f:
-                for line in f.readlines():
-                    if 'name' in line:
-                        stripped = line.strip()
-                        front = stripped[6:]
-                        back = stripped[:-7]
-                        wifi_name.append(back)
-                    if 'keyMaterial' in line:
-                        front = stripped[13:]
-                        back = stripped[:14]
-                        wifi_password.append(back)
-                        
+
+for i in wifi_files:
+    tree = ET.parse(i)
+    root = tree.getroot()
+    wifi_name = root.find("name").text
+    wifi_password = root.find("MSM/security/sharedKey/keyMaterial").text
+    wifi_names.append(wifi_name)
+    wifi_passwords.append(wifi_password)
+
+# Print the names and passwords
+for name, password in zip(wifi_names, wifi_passwords):
+    print(f"WiFi Name: {name}, Password: {password}")
+
+
+time.sleep(100)
